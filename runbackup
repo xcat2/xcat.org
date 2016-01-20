@@ -1,0 +1,21 @@
+#!/bin/sh
+
+TARGET_DIR=/home/xcat
+TARGET=xcat@xcat.org
+BACKUP_DIRECTORY="../../xcat.org_backup"
+
+mkdir -p ${BACKUP_DIRECTORY}
+
+echo "Sending the latest back up script over to xcat.org..."
+scp backup_xcat.org.sh ${TARGET}:${TARGET_DIR}
+
+echo "Executing the backup...."
+ssh ${TARGET} ${TARGET_DIR}/backup_xcat.org.sh
+
+echo "Saving the file..."
+scp ${TARGET}:${TARGET_DIR}/*xcat.org-backup.tar.gz ${BACKUP_DIRECTORY}
+
+echo "Cleaning up from xcat.org"
+ssh ${TARGET} rm ${TARGET_DIR}/*xcat.org-backup.tar.gz 
+
+ls -ltrh
