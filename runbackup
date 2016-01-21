@@ -1,21 +1,57 @@
 #!/bin/sh
 
+SCRIPT=$(readlink -f $0)
 TARGET_DIR=/home/xcat
 TARGET=xcat@xcat.org
-BACKUP_DIRECTORY="../../xcat.org_backup"
 
-mkdir -p ${BACKUP_DIRECTORY}
+D2=$(dirname ${SCRIPT})
+D3=$(dirname ${D2})
+D4=$(dirname ${D3})
+BACKUP_DIRECTORY="${D4}/xcat.org_backup"
 
-echo "Sending the latest back up script over to xcat.org..."
-scp backup_xcat.org.sh ${TARGET}:${TARGET_DIR}
+LOGFILE=${BACKUP_DIRECTORY}/status.out
 
-echo "Executing the backup...."
-ssh ${TARGET} ${TARGET_DIR}/backup_xcat.org.sh
+function LOGIT { 
+    DATE=`date -R`
+    echo -e "${DATE} ==> $@" >> ${LOGFILE}
+}
 
-echo "Saving the file..."
-scp ${TARGET}:${TARGET_DIR}/*xcat.org-backup.tar.gz ${BACKUP_DIRECTORY}
 
-echo "Cleaning up from xcat.org"
-ssh ${TARGET} rm ${TARGET_DIR}/*xcat.org-backup.tar.gz 
+if [[ -d ${BACKUP_DIRECTORY} ]]; then
+    # Create a new status file here, every thing else will append
+    echo "----------------------- xcat.org backup -----------------------" > ${LOGFILE}
 
-ls -ltrh
+    LOGIT "Displaying existing backups:" 
+    LOGIT "======================================================="
+    ls -ltrh ${BACKUP_DIRECTORY}/*.tar.gz >> ${LOGFILE}
+    LOGIT "======================================================="
+
+    scp backup_xcat.org.sh ${TARGET}:${TARGET_DIR}
+
+    LOGIT "Executing backup..."
+    ssh ${TARGET} ${TARGET_DIR}/backup_xcat.org.sh
+
+    LOGIT "Copying backup file to ${BACKUP_DIRECTORY}"
+    scp ${TARGET}:${TARGET_DIR}/*xcat.org-backup.tar.gz ${BACKUP_DIRECTORY}
+
+    LOGIT "Cleaning up xcat.org..."
+    ssh ${TARGET} rm ${TARGET_DIR}/*xcat.org-backup.tar.gz 
+
+    LOGIT "NEW BACKUP FILES\n"
+    LOGIT "======================================================="
+    ls -ltrh ${BACKUP_DIRECTORY}/*.tar.gz >> ${LOGFILE}
+    LOGIT "======================================================="
+else 
+    echo "ERROR! DIRECTORY DOES NOT EXIST! PLEASE CHECK SCRIPT!" >> ${LOGFILE}
+fi 
+
+
+cat ${BACKUP_DIRECTORY}/status.out
+
+
+# Send out mail
+SUBJECT="==> xcat.org bi-weekly backup status"
+RETURN="c910LinuxBuilder"
+RECIPIENT="vhu@us.ibm.com,wxp@cn.ibm.com"
+
+mailx -s "$SUBJECT" -r ${RETURN} ${RECIPIENT} < ${LOGFILE}
