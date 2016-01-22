@@ -2,7 +2,7 @@
 # This script is copied over to xcat.org and 
 # executed to tar up the directories in the list below
 
-SAVE_DIRECTORIES="./css ./images ./*.html ./files"
+SAVE_DIRECTORIES="./css ./images ./*.html ./files ./*.py"
 
 DATE=`date +%Y%M%d`
 FILENAME="${DATE}-xcat.org-backup.tar.gz"
