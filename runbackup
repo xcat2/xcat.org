@@ -51,7 +51,7 @@ cat ${BACKUP_DIRECTORY}/status.out
 
 # Send out mail
 SUBJECT="==> xcat.org bi-weekly backup status"
-RETURN="c910LinuxBuilder"
+RETURN="root@c910f02c07p02"
 RECIPIENT="vhu@us.ibm.com,wxp@cn.ibm.com"
 
 mailx -s "$SUBJECT" -r ${RETURN} ${RECIPIENT} < ${LOGFILE}
