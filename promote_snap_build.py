@@ -15,6 +15,15 @@
 
 # Usage: 
 # ./promote.sh [devel | snap] [release_number]
+
+#
+#
+# DO NOT MODIFY THE VERSION ON xcat.org, the master file is located in c910
+#   git clone <uid>@c910loginx01:/u/vhu/xcat2_autobuild.git
+#
+# After you clone the project, you can go into the xcat.org directory to find this script
+#
+#
 import sys
 import os
 from optparse import OptionParser
