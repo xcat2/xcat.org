@@ -46,7 +46,12 @@ def get_major_minor_versions(ver):
 
     if len(ver.split('.')) > 2:
         major_version =  "%s.%s" %(ver.split('.')[0], ver.split('.')[1])
-   
+    
+    if options.DEBUG:
+        print "Version passed in: "
+        print "    Major Version . . .: %s" %(major_version)
+        print "    Minor Version . . .: %s" %(minor_version)
+
     return major_version, minor_version
  
 
@@ -61,8 +66,9 @@ def check_args():
 
     major, minor = get_major_minor_versions(VERSION)
     if major != minor:
-        if options.TYPE == "devel": 
-            print "ERROR: Cannot promote a minor version (%s) for a development stream" %(minor)
+        if options.TYPE == "devel":
+            # default type is to promote the development build in major release of xCAT
+            print "ERROR: --type=%s speficied but target_version is a minor release (%s).  You must use the --type=snap option" %(options.TYPE, minor)
             sys.exit(1)
 
 
