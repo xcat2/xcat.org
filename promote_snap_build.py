@@ -28,12 +28,12 @@ import sys
 import os
 from optparse import OptionParser
 
-usage = "usage: %prog [options] version"
+usage = "usage: %prog [options] target_version"
 
 parser = OptionParser(usage=usage)
-parser.add_option("--target", dest="TARGET", help="Specify the target directory for the script to run against", default="files_new")
+parser.add_option("--target", dest="TARGET", help="[OPTIONAL] Specify the target directory for the script to run against. Default: files", default="files")
 parser.add_option("--type", dest="TYPE", help="Specify the type of build to promote [devel|snap]", default="devel")
-parser.add_option("--debug", dest="DEBUG", help="When specified, the commands will not execute, just print out", action="store_true", default=False)
+parser.add_option("--debug", dest="DEBUG", help="Does not execute, only print out commands", action="store_true", default=False)
 
 (options, args) = parser.parse_args()
 
@@ -91,6 +91,19 @@ def create_directory(destination):
 
 def create_latest_link(): 
     print "creating the link!"
+
+def get_confirmation():
+    yes = set(['yes','ye','y'])
+    no = set(['no','n'])
+
+    choice = raw_input("Are you sure you want to continue? (y/n): ").lower()
+    if choice in yes:
+        return True
+    elif choice in no:
+        return False
+    else:
+        print "Please respond with 'y' or 'n'"
+    return False
 
 """
 Promoting the 'devel' build is done when we are about to GA the next release 
@@ -156,6 +169,9 @@ def promote_devel_build():
             print "\t%s => %s" %(core_file, os.path.basename(real_file))
 
         print "Verification complete... "
+        if (get_confirmation() != True):
+            sys.exit(1) 
+
         print "Promoting..."
 
         #
@@ -207,7 +223,7 @@ def promote_devel_build():
             run_command(cmd) 
 
 def promote_snap_build():
-    print "Promoting snap build\n"
+    print "Promoting snap build, not yet implemented, TODO\n"
 
 
 if __name__ == '__main__':
