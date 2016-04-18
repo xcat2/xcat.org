@@ -228,9 +228,105 @@ def promote_devel_build():
             cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, major, repo_file)
             run_command(cmd) 
 
-def promote_snap_build():
-    print "Promoting snap build, not yet implemented, TODO\n"
+"""
+Promoting the 'snap' build is done when we want to release a mod release of xCAT. 
+For example, 2.11 is GA, and we want to promote the snap build of 2.11.1
 
+The weekly builds for the snap release should automatically built and should be uploaded
+to xcat.org, so we just need to move around the files in the correct place to promote 
+the 2.11.1 release
+
+Files:
+    Linux RPM:    xcat/xcat-core/2.11.x_Linux/core-snap
+    Linux Debian: xcat/xcat-core/2.11.x_Ubuntu/core-snap
+Repo:
+    Linux RPM:    xcat/repos/yum/2.11/core-snap
+    Linux Debian: xcat/repos/apt/2.11/core-snap
+
+When promoting the 2.11.1 snapshot build to GA, the following needs to happen:
+
+    1) The last file in 2.11.x_Linux/core-snap needs to be copied over to 
+       2.11.x_Linux/xcat-core and assigned the mod release number
+    2) The xcat/repos/yum/2.11/xcat-core repo should be removed
+    3) The xcat/repos/yum/2.11/core-snap should replace xcat-core repo 
+"""
+def promote_snap_build():
+
+    """
+    promote means to do the following:
+    1) take the devel/Linux/core-snap -> 2.X.x_Linux/core-snap
+    2) take the latest snap and create the GA
+    3) update the yum repo to hold the latest
+    4) repeat for Ubuntu 
+    """
+    major, minor = get_major_minor_versions(VERSION)
+    root_dir = "%s/xcat/xcat-core" %(options.TARGET)
+
+    types = ['Linux', 'Ubuntu']
+    for t in types:
+        print "=== Promoting %s release ===" %(t)
+        snap_source_dir = "%s/%s.x_%s/core-snap" %(root_dir, major, t)
+        snap_dest_dir = "%s/%s.x_%s/xcat-core" %(root_dir, major, t)
+        print ". . Looking at source directory: %s" %(snap_source_dir)
+        print ". . Looking at destination directory: %s" %(snap_dest_dir)
+
+        core_file = "core-rpms-snap.tar.bz2"
+        repo_type = "yum"
+        if 'Ubuntu' in t: 
+            core_file = "core-debs-snap.tar.bz2"
+            repo_type = "apt"
+
+        # Do all the error checking first, so we don't have to undo anything... 
+        print ". . Pre-verification starting . . . "
+
+        # Make sure the target_version is NOT already promoted 
+        target_ga_filename = "%s/xcat-core-%s-%s.tar.bz2" %(snap_dest_dir, minor, str.lower(t))
+        if os.path.isfile(target_ga_filename):
+            print "ERROR: The version requested (%s) has already been promoted at: %s" %(minor, target_ga_filename)
+            sys.exit(1)
+        else:
+            print "\t1) Version %s does not exist, it is OK to promote" %(os.path.basename(target_ga_filename))
+
+        # Make sure there is a snap build that can be used for the GA
+        snap_build = "%s/%s" %(snap_source_dir, core_file)
+
+        real_file = os.path.realpath(snap_build)
+        if not os.path.exists(real_file): 
+            print "ERROR, snap file (%s) does not link to an actual file!" %(snap_build)
+            sys.exit(1)
+        else:
+            print "\n\t2) Will promote the following snap build to GA"
+            print "\t  %s => %s" %(core_file, os.path.basename(real_file))
+
+        print ". . Pre-verification complete . . . "
+
+        if (get_confirmation() != True):
+            sys.exit(1) 
+
+        print "Promoting..."
+
+        # Copy the core-snap file
+        cmd = "cp %s %s" %(os.path.realpath(snap_build), target_ga_filename)
+        run_command(cmd) 
+
+        # remove the xcat-core repo
+        repo_source_dir = "%s/xcat/repos/%s/%s/core-snap" %(options.TARGET, repo_type, major)
+        repo_target_dir = "%s/xcat/repos/%s/%s/xcat-core" %(options.TARGET, repo_type, major)
+        print repo_source_dir
+        print repo_target_dir
+
+        cmd = "mv -f %s %s.old" %(repo_target_dir, repo_target_dir)
+        run_command(cmd)
+
+        # move the snapshot repo 
+        cmd = "mv %s %s" %(repo_source_dir, repo_target_dir)
+        run_command(cmd)
+
+        if "yum" in repo_type:
+            repo_file = "%s/xCAT-core.repo" %(repo_target_dir)
+            cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, major, repo_file)
+            run_command(cmd) 
+        
 
 if __name__ == '__main__':
 
