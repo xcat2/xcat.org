@@ -135,10 +135,9 @@ def promote_devel_build():
     devel_source_dir = "%s/xcat/xcat-core/devel" %(options.TARGET)
     """
     promote means to do the following:
-    1) take the devel/Linux/core-snap -> 2.X.x_Linux/core-snap
-    2) take the latest snap and create the GA
-    3) update the yum repo to hold the latest
-    4) repeat for Ubuntu 
+        1) Take the latest devel snap build and use that for the GA 
+        2) Copy over the yum/apt repos to be the latest Build
+        3) Update the links in the yum/apt repos 
     """
     major, minor = get_major_minor_versions(VERSION)
     types = ['Linux', 'Ubuntu']
@@ -183,27 +182,23 @@ def promote_devel_build():
         #
         # Promote the files area
         # 
-        snap_dest = "%s/core-snap" %(ga_root_dir)
 
-        # Create the GA directory 
-        create_directory(ga_root_dir)
-
-        # Move the core-snap directory to the GA root directory
-        cmd = "mv %s %s/" %(snap_source, ga_root_dir)
-        run_command(cmd)
-
-        # Create the xcat-core directory
+        # Create the GA xcat-core directory, which makes the root directory in the same process
         ga_dest = "%s/xcat-core" %(ga_root_dir)
         create_directory(ga_dest)
 
-        # Create a symlink pointing to the latest core-snap to be the GA file
+        # Create the snap drectory for snapshot builds - this may not be needed since snap builds will create it later 
+        snap_dest = "%s/core-snap" %(ga_root_dir)
+        #create_directory(snap_dest) 
+
+        # Calculate the GA filename
         ga_file = "%s/xcat-core-%s.tar.bz2" %(ga_dest, minor)
 
-        cmd = "ln -s ../core-snap/%s %s" %(os.path.basename(real_file), ga_file)
-        run_command(cmd) 
+        # Copy the core-file over to the GA root directory
+        cmd = "cp %s %s" %(snap_build, ga_file)
+        run_command(cmd)
 
-        # Clean up the devel directory for the target 
-        cmd = "rmdir %s/%s" %(devel_source_dir, t)
+        cmd = "ls -ltR %s" %(ga_dest)
         run_command(cmd)
 
         #
@@ -212,13 +207,10 @@ def promote_devel_build():
  
         repo_source_dir = "%s/xcat/repos/%s/%s/core-snap" %(options.TARGET, repo_type, options.TYPE)
         repo_target_dir = "%s/xcat/repos/%s/%s" %(options.TARGET, repo_type, major)
-        print repo_source_dir
-        print repo_target_dir
-
         create_directory(repo_target_dir)
 
-        # move the core-snap to xcat-core 
-        cmd = "mv %s %s" %(repo_source_dir, repo_target_dir)
+        # move the core-snap and rename to xcat-core 
+        cmd = "cp -rp %s %s" %(repo_source_dir, repo_target_dir)
         run_command(cmd)
         cmd = "mv %s/core-snap %s/xcat-core" %(repo_target_dir, repo_target_dir)
         run_command(cmd)
@@ -226,7 +218,10 @@ def promote_devel_build():
         if "yum" in repo_type:
             repo_file = "%s/xcat-core/xCAT-core.repo" %(repo_target_dir)
             cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, major, repo_file)
-            run_command(cmd) 
+            run_command(cmd)
+
+        #cmd = "ls -ltR %s" %(repo_target_dir)
+        #run_command(cmd)
 
 """
 Promoting the 'snap' build is done when we want to release a mod release of xCAT. 
