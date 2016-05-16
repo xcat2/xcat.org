@@ -34,6 +34,7 @@ parser = OptionParser(usage=usage)
 parser.add_option("--target", dest="TARGET", help="[OPTIONAL] Specify the target directory for the script to run against. Default: files", default="files")
 parser.add_option("--type", dest="TYPE", help="Specify the type of build to promote [devel|snap]", default="devel")
 parser.add_option("--debug", dest="DEBUG", help="Does not execute, only print out commands", action="store_true", default=False)
+parser.add_option("--force", dest="FORCE", help="Force the command to run, disregarding the error checking", action="store_true", default=False)
 
 (options, args) = parser.parse_args()
 
@@ -155,8 +156,9 @@ def promote_devel_build():
 
         # Make sure the release is not already GA
         ga_root_dir = "%s/xcat/xcat-core/%s.x_%s" %(options.TARGET, major, t)
-        if os.path.exists(ga_root_dir):
+        if os.path.exists(ga_root_dir) and not options.FORCE:
             print "ERROR: The version requested (%s) has already been promoted at: %s" %(major, ga_root_dir)
+            print "If you really want to re-promote the GA, use the --force option"
             sys.exit(1)
         else:
             print "\tVersion %s is OK to promote" %(major)
@@ -204,9 +206,24 @@ def promote_devel_build():
         #
         # Promote the yum/apt repos
         # 
- 
         repo_source_dir = "%s/xcat/repos/%s/%s/core-snap" %(options.TARGET, repo_type, options.TYPE)
         repo_target_dir = "%s/xcat/repos/%s/%s" %(options.TARGET, repo_type, major)
+
+        #
+        # if --force options is specified, clear out the repo first to copy over the new repo
+        # 
+        # Could easily just remove the directory for the user in this script, but I don't want to do a recursive remove
+        # incase the path is wrong, it could be very dangerous if we erase too much 
+        if options.FORCE:
+            repo_rename = "%s/xcat-core" %(repo_target_dir)
+            if os.path.isdir("%s.old" %(repo_rename)):
+                print "ERROR - directory %s.old exists, please remove before continuing" %(repo_rename)
+                sys.exit(1)
+
+            print "Changing %s to %s.old, if OK, manually remove the .old directories" %(repo_rename, repo_rename)
+            cmd = "mv %s %s.old" %(repo_rename, repo_rename)
+            run_command(cmd)
+ 
         create_directory(repo_target_dir)
 
         # move the core-snap and rename to xcat-core 
