@@ -194,7 +194,7 @@ def promote_devel_build():
         #create_directory(snap_dest) 
 
         # Calculate the GA filename
-        ga_file = "%s/xcat-core-%s.tar.bz2" %(ga_dest, minor)
+        ga_file = "%s/xcat-core-%s-%s.tar.bz2" %(ga_dest, minor, str.lower(t))
 
         # Copy the core-file over to the GA root directory
         cmd = "cp %s %s" %(snap_build, ga_file)
