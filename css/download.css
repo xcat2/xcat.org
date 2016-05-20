@@ -1,0 +1,23 @@
+.codetext {
+    font-family: Courier New;
+    font-size: 10pt;
+}
+
+#download_section {
+    padding-left: 25px;
+}
+
+#download_files {
+    padding-left: 50px;
+}
+
+#download_main {
+    width: 100%;
+}
+
+#download_main div {
+	padding-left: 25px;
+	padding-right: 25px;
+}
+
+
