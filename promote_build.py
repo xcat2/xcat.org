@@ -214,21 +214,22 @@ def promote_devel_build():
             repo_target_dir = "%s/xcat/repos/%s/%s" %(options.TARGET, repo_type, ver)
             repo_dirs.append(repo_target_dir)
 
-
             #
             # if --force options is specified, clear out the repo first to copy over the new repo
             # 
-            # Could easily just remove the directory for the user in this script, but I don't want to do a recursive remove
-            # incase the path is wrong, it could be very dangerous if we erase too much 
+            # Removing the old repo directory if it exists. Prompt the user to validate the path is
+            # correct so that we do not accidently remove too much. 
+            #
             if options.FORCE:
-                repo_rename = "%s/xcat-core" %(repo_target_dir)
-                if os.path.isdir("%s.old" %(repo_rename)):
-                    print "ERROR - directory %s.old exists, please remove before continuing" %(repo_rename)
-                    sys.exit(1)
+                import shutil 
+                repo_remove = "%s/xcat-core" %(repo_target_dir)
 
-                print "Changing %s to %s.old, if OK, manually remove the .old directories" %(repo_rename, repo_rename)
-                cmd = "mv %s %s.old" %(repo_rename, repo_rename)
-                run_command(cmd)
+                if os.path.exists(repo_remove):
+                    print "Removing the following directory: %s" %(repo_remove)
+                    if (get_confirmation() != True):
+                        sys.exit(1) 
+                    if not options.DEBUG:
+                        shutil.rmtree('%s' %(repo_remove))
      
             create_directory(repo_target_dir)
 
@@ -328,8 +329,6 @@ def promote_snap_build():
         # remove the xcat-core repo
         repo_source_dir = "%s/xcat/repos/%s/%s/core-snap" %(options.TARGET, repo_type, major)
         repo_target_dir = "%s/xcat/repos/%s/%s/xcat-core" %(options.TARGET, repo_type, major)
-        print repo_source_dir
-        print repo_target_dir
 
         cmd = "mv -f %s %s.old" %(repo_target_dir, repo_target_dir)
         run_command(cmd)
@@ -342,7 +341,8 @@ def promote_snap_build():
             repo_file = "%s/xCAT-core.repo" %(repo_target_dir)
             cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, major, repo_file)
             run_command(cmd) 
-        
+       
+        print "TODO: The promote of a snap build does not have the functionality in here to determine whether we need to update the latest repo link.  Manually create this if needed" 
 
 if __name__ == '__main__':
 
