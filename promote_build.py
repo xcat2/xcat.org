@@ -207,38 +207,42 @@ def promote_devel_build():
         # Promote the yum/apt repos
         # 
         repo_source_dir = "%s/xcat/repos/%s/%s/core-snap" %(options.TARGET, repo_type, options.TYPE)
-        repo_target_dir = "%s/xcat/repos/%s/%s" %(options.TARGET, repo_type, major)
 
-        #
-        # if --force options is specified, clear out the repo first to copy over the new repo
-        # 
-        # Could easily just remove the directory for the user in this script, but I don't want to do a recursive remove
-        # incase the path is wrong, it could be very dangerous if we erase too much 
-        if options.FORCE:
-            repo_rename = "%s/xcat-core" %(repo_target_dir)
-            if os.path.isdir("%s.old" %(repo_rename)):
-                print "ERROR - directory %s.old exists, please remove before continuing" %(repo_rename)
-                sys.exit(1)
+        repo_dirs = []
+        for ver in ['%s' %(major), 'latest']:
+            print "Version: %s" %(ver)
+            repo_target_dir = "%s/xcat/repos/%s/%s" %(options.TARGET, repo_type, ver)
+            repo_dirs.append(repo_target_dir)
 
-            print "Changing %s to %s.old, if OK, manually remove the .old directories" %(repo_rename, repo_rename)
-            cmd = "mv %s %s.old" %(repo_rename, repo_rename)
+
+            #
+            # if --force options is specified, clear out the repo first to copy over the new repo
+            # 
+            # Could easily just remove the directory for the user in this script, but I don't want to do a recursive remove
+            # incase the path is wrong, it could be very dangerous if we erase too much 
+            if options.FORCE:
+                repo_rename = "%s/xcat-core" %(repo_target_dir)
+                if os.path.isdir("%s.old" %(repo_rename)):
+                    print "ERROR - directory %s.old exists, please remove before continuing" %(repo_rename)
+                    sys.exit(1)
+
+                print "Changing %s to %s.old, if OK, manually remove the .old directories" %(repo_rename, repo_rename)
+                cmd = "mv %s %s.old" %(repo_rename, repo_rename)
+                run_command(cmd)
+     
+            create_directory(repo_target_dir)
+
+            # move the core-snap and rename to xcat-core 
+            cmd = "cp -rp %s %s" %(repo_source_dir, repo_target_dir)
             run_command(cmd)
- 
-        create_directory(repo_target_dir)
-
-        # move the core-snap and rename to xcat-core 
-        cmd = "cp -rp %s %s" %(repo_source_dir, repo_target_dir)
-        run_command(cmd)
-        cmd = "mv %s/core-snap %s/xcat-core" %(repo_target_dir, repo_target_dir)
-        run_command(cmd)
-
-        if "yum" in repo_type:
-            repo_file = "%s/xcat-core/xCAT-core.repo" %(repo_target_dir)
-            cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, major, repo_file)
+            cmd = "mv %s/core-snap %s/xcat-core" %(repo_target_dir, repo_target_dir)
             run_command(cmd)
 
-        #cmd = "ls -ltR %s" %(repo_target_dir)
-        #run_command(cmd)
+            if "yum" in repo_type:
+                repo_file = "%s/xcat-core/xCAT-core.repo" %(repo_target_dir)
+                cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, ver, repo_file)
+                run_command(cmd)
+
 
 """
 Promoting the 'snap' build is done when we want to release a mod release of xCAT. 
