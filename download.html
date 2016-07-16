@@ -20,6 +20,17 @@
 <div class="container">
     <div class="download_main">
 
+    <h2>Installing with go-xcat <sup class="new">New!</sup> </h2>
+
+    To easily install xCAT and handle the dependency package, a new script <b>go-xcat</b> is provided.
+    <br>
+    <br>On the target xCAT Management Node, run the following commands to install the latest version of xCAT:
+    <pre class="codetext">
+       wget http://xcat.org/files/go-xcat -O - &gt;/tmp/go-xcat
+       chmod +x /tmp/go-xcat
+       /tmp/go-xcat
+    </pre>
+
     <h2>Download xCAT</h2>
 
     <p>There are a number of options provided for installing xCAT.</p>
@@ -30,14 +41,6 @@
     </ol>
 
     <p>Regardless of the option that is chosen to install xCAT, <b>BOTH</b> <tt>xcat-core</tt> and <tt>xcat-dep</tt> are needed before starting the install.</p>
-
-    <p><sup class="new">New!</sup> For a simple xCAT installation solution, just type the following at your shell prompt</p>
-    <pre class="codetext">
-    wget http://xcat.org/files/go-xcat -O - &gt;/tmp/go-xcat
-    chmod +x /tmp/go-xcat
-    /tmp/go-xcat install</pre>
-
-    <p>This will install xCAT to use the default xcat.org repository.</p>
 
     <b><a href="#xcat-core">xCAT Core Packages (xcat-core)</a></b> is the main package containing the xCAT software.  The following builds are available:
     <ul>
