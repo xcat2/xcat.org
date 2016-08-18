@@ -35,6 +35,7 @@ parser.add_option("--target", dest="TARGET", help="[OPTIONAL] Specify the target
 parser.add_option("--type", dest="TYPE", help="Specify the type of build to promote [devel|snap]", default="devel")
 parser.add_option("--debug", dest="DEBUG", help="Does not execute, only print out commands", action="store_true", default=False)
 parser.add_option("--force", dest="FORCE", help="Force the command to run, disregarding the error checking", action="store_true", default=False)
+parser.add_option("--link_latest", dest="LINK_LATEST", help="Force update the latest link to the promoted build.", action="store_true", default=False)
 
 (options, args) = parser.parse_args()
 
@@ -342,7 +343,53 @@ def promote_snap_build():
             cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, major, repo_file)
             run_command(cmd) 
        
-        print "TODO: The promote of a snap build does not have the functionality in here to determine whether we need to update the latest repo link.  Manually create this if needed" 
+        if options.LINK_LATEST:
+            #
+            # Promote the yum/apt repos
+            # 
+            repo_source_dir = "%s/xcat/repos/%s/%s/core-snap" %(options.TARGET, repo_type, major)
+
+            print "source dir: %s" %(repo_source_dir)
+            
+            for ver in ['%s' %(major), 'latest']:
+                print "Version: %s" %(ver)
+                repo_target_dir = "%s/xcat/repos/%s/%s" %(options.TARGET, repo_type, ver)
+
+                # Since this is a snap build, we just want to remove the existing xcat-core repo 
+                # and replace it with the core-snap repo, only keeping the latest
+                repo_remove = "%s/xcat-core" %(repo_target_dir)
+                if options.FORCE:
+                    import shutil 
+
+                    if os.path.exists(repo_remove):
+                        if options.DEBUG:
+                            print "DEBUG: Removing the following directory: %s" %(repo_remove)
+                        else:
+                            if (get_confirmation() != True):
+                                sys.exit(1) 
+                            if not options.DEBUG:
+                                shutil.rmtree('%s' %(repo_remove))
+                else:
+                    if os.path.exists(repo_remove):
+                        print "The directory exists: %s, you need to force remove to continue..." %(repo_remove)
+                        sys.exit(1)
+
+                create_directory(repo_target_dir)
+
+                cmd = "cp -rp %s %s" %(repo_source_dir, repo_target_dir)
+                run_command(cmd)
+                cmd = "mv %s/core-snap %s/xcat-core" %(repo_target_dir, repo_target_dir)
+                run_command(cmd)
+
+                if "yum" in repo_type:
+                    repo_file = "%s/xcat-core/xCAT-core.repo" %(repo_target_dir)
+                    cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, ver, repo_file)
+                    run_command(cmd)
+
+        else: 
+            print "<< Updating the latest xCAT repository >>"
+            print "The default behavior for updating the 'latest' repo on a snap build promote is NO." 
+            print "If this snapshot build is in fact the latest version of xCAT, rerun the command with --link_latest option"
 
 if __name__ == '__main__':
 
