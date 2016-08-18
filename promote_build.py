@@ -90,6 +90,7 @@ def run_command(cmd):
     if options.DEBUG: 
         print "DEBUG: %s" %(cmd)
     else:
+        print "Running cmd: %s" %(cmd)
         os.system(cmd)
 
 def create_directory(destination): 
@@ -299,11 +300,12 @@ def promote_snap_build():
 
         # Make sure the target_version is NOT already promoted 
         target_ga_filename = "%s/xcat-core-%s-%s.tar.bz2" %(snap_dest_dir, minor, str.lower(t))
-        if os.path.isfile(target_ga_filename):
-            print "ERROR: The version requested (%s) has already been promoted at: %s" %(minor, target_ga_filename)
-            sys.exit(1)
-        else:
-            print "\t1) Version %s does not exist, it is OK to promote" %(os.path.basename(target_ga_filename))
+        if not options.FORCE:
+            if os.path.isfile(target_ga_filename):
+                print "ERROR: The version requested (%s) has already been promoted at: %s" %(minor, target_ga_filename)
+                sys.exit(1)
+            else:
+                print "\t1) Version %s does not exist, it is OK to promote" %(os.path.basename(target_ga_filename))
 
         # Make sure there is a snap build that can be used for the GA
         snap_build = "%s/%s" %(snap_source_dir, core_file)
@@ -331,16 +333,16 @@ def promote_snap_build():
         repo_source_dir = "%s/xcat/repos/%s/%s/core-snap" %(options.TARGET, repo_type, major)
         repo_target_dir = "%s/xcat/repos/%s/%s/xcat-core" %(options.TARGET, repo_type, major)
 
-        cmd = "mv -f %s %s.old" %(repo_target_dir, repo_target_dir)
-        run_command(cmd)
+        #cmd = "mv -f %s %s.old" %(repo_target_dir, repo_target_dir)
+        #run_command(cmd)
 
         # move the snapshot repo 
-        cmd = "mv %s %s" %(repo_source_dir, repo_target_dir)
+        cmd = "cp -rp %s %s" %(repo_source_dir, repo_target_dir)
         run_command(cmd)
 
         if "yum" in repo_type:
             repo_file = "%s/xCAT-core.repo" %(repo_target_dir)
-            cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, major, repo_file)
+            cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, major, repo_type, major, repo_file)
             run_command(cmd) 
        
         if options.LINK_LATEST:
@@ -351,7 +353,7 @@ def promote_snap_build():
 
             print "source dir: %s" %(repo_source_dir)
             
-            for ver in ['%s' %(major), 'latest']:
+            for ver in ['latest']:
                 print "Version: %s" %(ver)
                 repo_target_dir = "%s/xcat/repos/%s/%s" %(options.TARGET, repo_type, ver)
 
@@ -383,7 +385,7 @@ def promote_snap_build():
 
                 if "yum" in repo_type:
                     repo_file = "%s/xcat-core/xCAT-core.repo" %(repo_target_dir)
-                    cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, options.TYPE, repo_type, ver, repo_file)
+                    cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, major, repo_type, ver, repo_file)
                     run_command(cmd)
 
         else: 
