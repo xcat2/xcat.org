@@ -335,6 +335,8 @@ def promote_snap_build():
 
         #cmd = "mv -f %s %s.old" %(repo_target_dir, repo_target_dir)
         #run_command(cmd)
+        cmd = "rm -rf %s" %(repo_target_dir)
+        run_command(cmd)
 
         # move the snapshot repo 
         cmd = "cp -rp %s %s" %(repo_source_dir, repo_target_dir)
