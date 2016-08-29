@@ -4,7 +4,7 @@
 
 SAVE_DIRECTORIES="./css ./images ./*.html ./files ./*.py"
 
-DATE=`date +%Y%M%d`
+DATE=`date +%Y%m%d`
 FILENAME="${DATE}-xcat.org-backup.tar.gz"
 
 TARGET_TOPDIR=/var/www/xcat.org
