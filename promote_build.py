@@ -138,6 +138,7 @@ def promote_snap_build():
     2) take the latest snap and create the GA
     3) update the yum repo to hold the latest
     4) repeat for Ubuntu 
+    5) handle xcat-dep repo as well
     """
     major, minor = get_major_minor_versions(VERSION)
     root_dir = "%s/xcat/xcat-core" %(options.TARGET)
@@ -197,21 +198,27 @@ def promote_snap_build():
         # remove the xcat-core repo
         repo_source_dir = "%s/xcat/repos/%s/%s/core-snap" %(options.TARGET, repo_type, major)
         repo_target_dir = "%s/xcat/repos/%s/%s/xcat-core" %(options.TARGET, repo_type, major)
+        dep_source_dir = "%s/xcat/repos/%s/devel/xcat-dep" %(options.TARGET, repo_type)
+        dep_target_dir = "%s/xcat/repos/%s/%s/xcat-dep" %(options.TARGET, repo_type, major)
 
         #cmd = "mv -f %s %s.old" %(repo_target_dir, repo_target_dir)
         #run_command(cmd)
         cmd = "rm -rf %s" %(repo_target_dir)
         run_command(cmd)
+        cmd = "rm -rf %s" %(dep_target_dir)
+        run_command(cmd)
 
         # move the snapshot repo 
         cmd = "cp -rp %s %s" %(repo_source_dir, repo_target_dir)
+        run_command(cmd)
+        cmd = "cp -rp %s %s" %(dep_source_dir, dep_target_dir)
         run_command(cmd)
 
         if "yum" in repo_type:
             repo_file = "%s/xCAT-core.repo" %(repo_target_dir)
             cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, major, repo_type, major, repo_file)
             run_command(cmd) 
-       
+
         if options.LINK_LATEST:
             #
             # Promote the yum/apt repos
@@ -219,7 +226,7 @@ def promote_snap_build():
             repo_source_dir = "%s/xcat/repos/%s/%s/core-snap" %(options.TARGET, repo_type, major)
 
             print "source dir: %s" %(repo_source_dir)
-            
+
             for ver in ['latest']:
                 print "Version: %s" %(ver)
                 repo_target_dir = "%s/xcat/repos/%s/%s" %(options.TARGET, repo_type, ver)
@@ -254,6 +261,11 @@ def promote_snap_build():
                     repo_file = "%s/xcat-core/xCAT-core.repo" %(repo_target_dir)
                     cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, major, repo_type, ver, repo_file)
                     run_command(cmd)
+
+                cmd = "rm -f %s/xcat-dep" %(repo_target_dir)
+                run_command(cmd)
+                cmd = "ln -s ../%s/xcat-dep %s/xcat-dep" %(major, repo_target_dir)
+                run_command(cmd)
 
         else: 
             print "<< Updating the latest xCAT repository >>"
