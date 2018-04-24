@@ -10,7 +10,7 @@
 # 2. promoting Shapshot builds to GA for next minor release
 
 # The following needs to be done during the "promote"
-# * update the xCAT-*.repo files to point from core-snap -> xcat-core
+# * update the xcat-*.repo files to point from core-snap -> xcat-core
 # * rename the tar.gz file to contain the release number 
 
 # Usage: 
@@ -215,7 +215,7 @@ def promote_snap_build():
         run_command(cmd)
 
         if "yum" in repo_type:
-            repo_file = "%s/xCAT-core.repo" %(repo_target_dir)
+            repo_file = "%s/xcat-core.repo" %(repo_target_dir)
             cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, major, repo_type, major, repo_file)
             run_command(cmd) 
 
@@ -258,7 +258,7 @@ def promote_snap_build():
                 run_command(cmd)
 
                 if "yum" in repo_type:
-                    repo_file = "%s/xcat-core/xCAT-core.repo" %(repo_target_dir)
+                    repo_file = "%s/xcat-core/xcat-core.repo" %(repo_target_dir)
                     cmd = "sed -i s#%s/%s/core-snap#%s/%s/xcat-core#g %s" %(repo_type, major, repo_type, ver, repo_file)
                     run_command(cmd)
 
@@ -278,4 +278,3 @@ if __name__ == '__main__':
      promote_build()
 
      sys.exit(0)
-
