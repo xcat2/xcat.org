@@ -36,6 +36,8 @@ parser.add_option("--type", dest="TYPE", help="Specify the type of build to prom
 parser.add_option("--debug", dest="DEBUG", help="Does not execute, only print out commands", action="store_true", default=False)
 parser.add_option("--force", dest="FORCE", help="Force the command to run, disregarding the error checking", action="store_true", default=False)
 parser.add_option("--link_latest", dest="LINK_LATEST", help="Force update the latest link to the promoted build.", action="store_true", default=False)
+parser.add_option("--yes", dest="YES", help="Excute promote directly, do not ask user to input confirmation", action="store_true", default=False)
+
 
 (options, args) = parser.parse_args()
 
@@ -182,8 +184,9 @@ def promote_snap_build():
 
         print ". . Pre-verification complete . . . "
 
-        if (get_confirmation() != True):
-            sys.exit(1) 
+        if not options.YES:
+            if (get_confirmation() != True):
+                sys.exit(1) 
 
         print "Promoting..."
 
@@ -241,8 +244,9 @@ def promote_snap_build():
                         if options.DEBUG:
                             print "DEBUG: Removing the following directory: %s" %(repo_remove)
                         else:
-                            if (get_confirmation() != True):
-                                sys.exit(1) 
+                            if not options.YES:
+                                if (get_confirmation() != True):
+                                    sys.exit(1) 
                             if not options.DEBUG:
                                 shutil.rmtree('%s' %(repo_remove))
                 else:
